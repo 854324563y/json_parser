@@ -44,6 +44,8 @@ namespace json {
     struct JsonParser {
         std::string_view json_str;
         size_t pos = 0;
+
+        //use of isspace() isdigit()
         void parse_whitespace() {
             while (pos < json_str.size() && std::isspace(json_str[pos])) {
                 ++pos;
@@ -74,7 +76,7 @@ namespace json {
             return {};
         }
 
-        auto parse_number()->std::optional<Value> {
+        auto parse_number()->std::optional<Value> {     //return int(Int) or double(Float)
             size_t endpos = pos;
             while (endpos < json_str.size() && (
                 std::isdigit(json_str[endpos]) ||
@@ -123,6 +125,7 @@ namespace json {
             Array arr;
             while (pos < json_str.size() && json_str[pos] != ']') {
                 auto value = parse_value();
+                if (!value.has_value()) throw std::runtime_error("\n\tparse_array() 'value' error! has_value() return false");
                 arr.push_back(value.value());
                 parse_whitespace();
                 if (pos < json_str.size() && json_str[pos] == ',') {
@@ -139,6 +142,7 @@ namespace json {
             Object obj;
             while (pos < json_str.size() && json_str[pos] != '}') {
                 auto key = parse_value();
+                if (!key.has_value()) throw std::runtime_error("\n\tparse_object() 'key' error! has_value() return false");
                 parse_whitespace();
                 //std::holds_alternative判断std::variant中是否包含指定的类型。
                 //json中字典的键一定是string，所以要std::holds_alternative<String>判断
@@ -150,6 +154,7 @@ namespace json {
                 }
                 parse_whitespace();
                 auto val = parse_value();
+                if (!val.has_value()) throw std::runtime_error("\n\tparse_object() 'val' error! has_value() return false");
                 obj[std::get<String>(key.value())] = val.value();
                 parse_whitespace();
                 if (pos < json_str.size() && json_str[pos] == ',') {
@@ -202,8 +207,11 @@ namespace json {
     class JsonGenerator {
     public:
         static auto generate(const Node& node) -> std::string {
+            //std::visit用来对一个 variant 或 tuple 中的所有类型执行相同的操作。
+            //需要考虑variant所有可能的类型。注意decay_t，建议使用constexpr
             return std::visit(
                 [](auto&& arg) -> std::string {
+                    //std::decay_t是一个类型转换工具，返回去掉引用或者指针的类型。
                     using T = std::decay_t<decltype(arg)>;
                     if constexpr (std::is_same_v<T, Null>) {
                         return "null";
@@ -241,13 +249,13 @@ namespace json {
                 json_str += generate(node);
                 json_str += ',';
             }
-            if (!array.empty()) json_str.pop_back();
+            if (!array.empty()) json_str.pop_back();    //去掉最后一个','
             json_str += ']';
             return json_str;
         }
         static auto generate_object(const Object& object) -> std::string {
             std::string json_str = "{";
-            for (const auto& [key, node] : object) {
+            for (const auto& [key, node] : object) {    // map的遍历
                 json_str += generate_string(key);
                 json_str += ':';
                 json_str += generate(node);
@@ -259,7 +267,7 @@ namespace json {
         }
     };
 
-    inline auto generate(const Node& node) -> std::string { return JsonGenerator::generate(node); }
+    //inline auto generate(const Node& node) -> std::string { return JsonGenerator::generate(node); }
 
 
     auto  operator << (std::ostream& out, const Node& t) ->std::ostream& {
@@ -283,13 +291,14 @@ int main() {
     if (p.has_value()) {
         x = p.value();
     } else {
-        std::cout<< "没有值" <<std::endl;
+        std::cout<< "parser() 没有值" <<std::endl;
         return 1;
     }
     std::cout << x << "\n";
+    //std::cout << typeid(x).name() <<std::endl;
 
-//    x["configurations"].push({true});
-//    x["configurations"].push({Null {}});
-//    x["version"] = { 114514LL };
-//    std::cout << x << "\n";
+    x["configurations"].push({true});   // Node{true}
+    x["configurations"].push({Null {}});// Node{Null {}}
+    x["version"] = { 12345678LL };
+    std::cout << x << "\n"; //调用auto  operator << (std::ostream& out, const Node& t) ->std::ostream& { }
 }

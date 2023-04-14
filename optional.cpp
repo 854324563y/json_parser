@@ -3,6 +3,13 @@
 #include <optional> //c++17
 #include <complex>
 #include <vector>
+
+/**
+ * optional<> 对象可先用.has_value()方法判断是否为空。否则直接.value()取值可能发生std::bad_optional_access异常；也可以直接'*'解引用。
+ * nullopt 宏
+ * make_optional<> 方法。参数直接初始化需要in_place : op{in_place, args...}。
+ */
+
 using namespace std;
 struct Out {
         string out1 { "" };
@@ -61,13 +68,13 @@ int main() {
      cout << (*ret).out1 << endl;    //不会抛出异常
      cout << ret->out1 << endl;      //不会抛出异常
 
-     auto ret = test_optional::func("");
+     auto ret2 = test_optional::func("");
      //抛出异常 libc++abi: terminating with uncaught exception of type std::bad_optional_access: bad_optional_access
-     cout << ret.value().out1 << endl;
+     cout << ret2.value().out1 << endl;
 
-    auto ret = test_optional::func("");
+    auto ret3 = test_optional::func("");
     // 当没有 value 调用该方法时将使用传入的默认值
     Out defaultVal;
-    cout << ret.value_or(defaultVal).out1 << endl;
+    cout << ret3.value_or(defaultVal).out1 << endl;
     return 0;
 }
