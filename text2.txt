@@ -1,0 +1,12 @@
+def add(x y){
+    return x + y;
+}
+def main(){
+    a = 123;
+    b = 456;
+    for i in [1, 10 , 2] {
+        sum = sum + i;
+    }
+    println sum;
+    print add(a,b);
+}
