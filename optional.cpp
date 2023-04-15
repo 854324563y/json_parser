@@ -5,9 +5,10 @@
 #include <vector>
 
 /**
- * optional<> 对象可先用.has_value()方法判断是否为空。否则直接.value()取值可能发生std::bad_optional_access异常；也可以直接'*'解引用。
+ * optional<> 对象可先用 .has_value() 方法判断是否为空。否则直接 .value() 取值可能发生std::bad_optional_access异常；也可以直接'*'解引用。
  * nullopt 宏
- * make_optional<> 方法。参数直接初始化需要in_place : op{in_place, args...}。
+ * make_optional<> 方法。参数直接初始化需要 in_place : op{in_place, args...}。
+ * .value_or(defaultVal) 方法，如果optional<> 对象 op 没有值，则返回传入的 defaultVal 对象的值。
  */
 
 using namespace std;
